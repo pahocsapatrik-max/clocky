@@ -96,12 +96,12 @@ button {width:100%;padding:14px;background:#3a383bff;color:white;border:none;bor
 
     <form method="POST">
         <div class="form-group">
-            <label>Username</label>
+            <label>Felhasználónév</label>
             <input type="text" name="username" required>
         </div>
 
         <div class="form-group">
-            <label>Password</label>
+            <label>jelszó</label>
             <input type="password" name="password" required>
         </div>
 

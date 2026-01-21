@@ -37,7 +37,7 @@ include 'header.php';
 ?>
 
 <div class="container">
-    <h2>All Employees</h2>
+    <h2>Összes Dolgozó</h2>
 
     <style>
         .container {
@@ -98,7 +98,7 @@ include 'header.php';
         <input 
             type="text" 
             name="search" 
-            placeholder="Search by name..." 
+            placeholder="keresés Név alapján..." 
             value="<?php echo htmlspecialchars($search); ?>"
         >
         <button type="submit" class="btn-search">Search</button>

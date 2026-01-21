@@ -125,12 +125,12 @@ button {
     <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <div class="form-group">
             <label for="role_name">Munakör Neve:</label>
-            <input type="text" id="role_name" name="role_name" required placeholder="Pl: Senior Developer">
+            <input type="text" id="role_name" name="role_name" required placeholder=>
         </div>
 
         <div class="form-group">
             <label for="pph_huf">fizetés/óra :</label>
-            <input type="number" id="pph_huf" name="pph_huf" required placeholder="Pl: 5000">
+            <input type="number" id="pph_huf" name="pph_huf" required placeholder=>
         </div>
 
         <button type="submit">Munkakör hozzáadása</button>
