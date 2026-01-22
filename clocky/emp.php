@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 include 'config.php';
@@ -101,17 +102,17 @@ include 'header.php';
             placeholder="keresés Név alapján..." 
             value="<?php echo htmlspecialchars($search); ?>"
         >
-        <button type="submit" class="btn-search">Search</button>
+        <button type="submit" class="btn-search">keresés</button>
     </form>
 
     <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>DOB</th>
-                <th>Work Hours</th>
-                <th>Role</th>
+                <th>Teljes Név</th>
+                <th>Születési Dátum</th>
+                <th>Munkaidő</th>
+                <th>Munkakör</th>
                 <th>Email</th>
             </tr>
         </thead>
