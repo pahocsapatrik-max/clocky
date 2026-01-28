@@ -12,7 +12,7 @@
         }
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #a3a3a3ff 0%, #00ff9dff 100%);
+            background: linear-gradient(135deg, #226a60ff 0%, #00ffb7ff 100%);
             padding-top: 70px; 
         }
 
