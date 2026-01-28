@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 include 'config.php';
@@ -11,7 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 1) {
 
 $page_title = 'Employees';
 
-// 2. Keresési logika és Adatbázis lekérdezés (még a HTML előtt!)
+// 2. Keresési logika és Adatbázis lekérdezés
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 if ($search !== '') {
@@ -33,7 +32,42 @@ if ($search !== '') {
     ");
 }
 
-// 3. Header behúzása
+// --- EXPORTÁLÁSI LOGIKA (Minden HTML kimenet előtt!) ---
+if (isset($_GET['export'])) {
+    $format = $_GET['export'];
+    $export_data = [];
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $export_data[] = $row;
+        }
+    }
+
+    // TXT Export
+    if ($format === 'txt') {
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Disposition: attachment; filename="kimutatas.txt"');
+        echo "ID\tNév\tSzületés\tMunkaidő\tMunkakör\tEmail\r\n";
+        echo str_repeat("-", 80) . "\r\n";
+        foreach ($export_data as $row) {
+            echo "{$row['empID']}\t{$row['name']}\t{$row['dob']}\t{$row['tn']}\t" . ($row['role_name'] ?? 'Nincs') . "\t{$row['email']}\r\n";
+        }
+        exit();
+    }
+
+    
+   
+        
+        $html .= '</tbody></table>';
+        
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream("kimutatas.pdf");
+        exit();
+    }
+
+
+// 3. Megjelenítés kezdete
 include 'header.php';
 ?>
 
@@ -51,7 +85,7 @@ include 'header.php';
         }
         h2 {
             text-align: center;
-            color: #b50ddf;
+            color: #000000ff;
             margin-bottom: 20px;
         }
         .search-box {
@@ -60,7 +94,7 @@ include 'header.php';
         input[type="text"] {
             width: 100%;
             padding: 12px;
-            border: 1px solid #d40ee6;
+            border: 1px solid #00ffe5ff;
             border-radius: 6px;
         }
         .btn-search {
@@ -76,6 +110,26 @@ include 'header.php';
         .btn-search:hover {
             background: #363636;
         }
+        /* Export gombok */
+        .export-actions {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn-export {
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            transition: 0.3s;
+        }
+        .bg-txt { background-color: #6c757d; }
+        
+        .btn-export:hover { opacity: 0.8; }
+
         .table {
             width: 100%;
             border-collapse: collapse;
@@ -87,11 +141,11 @@ include 'header.php';
             text-align: left;
         }
         .table thead {
-            background: #a407e2;
+            background: #00ffbbff;
             color: white;
         }
         .table tbody tr:hover {
-            background: #f3e5f5;
+            background: #00e4baff;
         }
     </style>
 
@@ -105,11 +159,17 @@ include 'header.php';
         <button type="submit" class="btn-search">keresés</button>
     </form>
 
+    <div class="export-actions">
+        <a href="?export=txt&search=<?php echo urlencode($search); ?>" class="btn-export bg-txt">Letöltés TXT</a>
+      
+      
+    </div>
+
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Teljes Név</th>
+              
+                <th>teljes Név</th>
                 <th>Születési Dátum</th>
                 <th>Munkaidő</th>
                 <th>Munkakör</th>
@@ -118,11 +178,12 @@ include 'header.php';
         </thead>
         <tbody>
             <?php
-            // 4. Adatok kiírása
             if ($result && $result->num_rows > 0) {
+                // Pointer visszaállítása a táblázathoz
+                $result->data_seek(0);
                 while ($row = $result->fetch_assoc()) {
                     echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['empID']) . "</td>";
+                
                     echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['dob']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['tn']) . "</td>";
@@ -134,7 +195,6 @@ include 'header.php';
                 echo "<tr><td colspan='6' style='text-align:center;'>No employees found.</td></tr>";
             }
 
-            // Kapcsolat lezárása
             if (isset($stmt)) {
                 $stmt->close();
             }

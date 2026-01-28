@@ -58,7 +58,7 @@ header a {
 
 h2 {
     text-align: center;
-    color: #c908e2ff;
+    color: #373737ff;
     margin-bottom: 25px;
 }
 
@@ -82,7 +82,7 @@ input {
 button {
     width: 100%;
     padding: 12px;
-    background: #770ccfff;
+    background: #4e4e4eff;
     color: white;
     font-weight: bold;
     font-size: 16px;

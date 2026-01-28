@@ -9,7 +9,10 @@ if (!isset($_SESSION['logged_in'], $_SESSION['role']) || $_SESSION['logged_in'] 
 }
 
 /* ===== LOGOUT KEZELÉS ===== */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+// Ez a rész kezeli, ha rákattintasz a kijelentkezésre
+// Ha külön logout.php-ra küldöd, akkor ez a blokk elhagyható, 
+// de így egy fájlban marad minden.
+if (isset($_GET['logout'])) {
     session_destroy();
     header('Location: index.php');
     exit;
@@ -19,88 +22,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Felhasználói Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #8300fd;
+            background-color: #00ffe1ff; /* Ciánkék háttér */
             font-family: 'Roboto', sans-serif;
-            color: white;
-            text-align: center;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
         }
 
         h1 {
-            font-size: 50px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            color: white;
+            font-size: 60px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+            margin: 0;
+            text-align: center;
         }
 
         h2 {
-            font-size: 24px;
-            font-weight: 300;
-            opacity: 0.9;
-            margin-bottom: 30px;
+            color: white;
+            font-size: 40px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+            margin: 0 0 30px 0;
+            text-align: center;
         }
 
-        /* --- KIJELENTKEZÉS GOMB DESIGN --- */
-        .logout-form {
-            list-style: none;
-            padding: 0;
+        /* --- Kijelentkezés gomb dizájn --- */
+        .logout-wrapper {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            list-style: none; /* Li pont eltüntetése */
         }
 
-        .logout-btn {
-            background: #ff0000ff;
-            color: #ffffffff;
-            border: none;
-            padding: 12px 35px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .btn-logout {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: #1a1a1aff; /* Sötét háttér */
+            color: #00ffe1ff;           /* Cián szöveg */
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            border-radius: 50px;       /* Kapszula forma */
+            border: 2px solid #1a1a1aff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
         }
 
-        .logout-btn:hover {
-            background: #f0f0f0;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .logout-btn:active {
-            transform: translateY(-1px);
+        .btn-logout:hover {
+            background-color: white;
+            color: #1a1a1aff;
+            border-color: white;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>ÜDVÖZÖLJÜK!</h1>
-        <h2>Önnek sima jogosultságai vannak</h2>
-
-        <form method="POST" class="logout-form">
-            <button type="submit" name="logout" class="logout-btn">Kijelentkezés</button>
-        </form>
+    <div class="logout-wrapper">
+        <a href="?logout=1" class="btn-logout">Kijelentkezés</a>
     </div>
+
+    <h1>ÜDVÖZÖLJÜK!</h1>
+    <h2>ÖNNEK SIMA JOGOSULTSÁGAI VANNAK</h2>
 
 </body>
 </html>

@@ -73,14 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Login - Clocky</title>
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
-body {font-family: Arial,sans-serif; background: linear-gradient(135deg,#7e05b6ff 0%,#2d0555ff 100%); min-height:100vh; display:flex; justify-content:center; align-items:center;}
-.login-container {background: rgba(255,255,255,0.95); padding:40px; border-radius:16px; width:100%; max-width:400px; text-align:center;}
-h1 {font-size:48px;color:#9205f7ff;margin-bottom:20px;}
-h2 {font-size:20px;color:#7e7c80ff;margin-bottom:30px;}
+body {font-family: Arial,sans-serif; background: linear-gradient(0, 255, 213, 0.95); min-height:100vh; display:flex; justify-content:center; align-items:center;}
+.login-container {background: rgba(105, 105, 105, 0.95); padding:40px; border-radius:16px; width:100%; max-width:400px; text-align:center;}
+h1 {font-size:48px;color:rgba(255, 255, 255, 0.95);}
+h2 {font-size:20px;color:rgba(255, 255, 255, 0.95);}
 .form-group {margin-bottom:20px;text-align:left;}
 label {font-weight:bold;}
 input {width:100%;padding:12px;border-radius:8px;border:1px solid #ccc;}
-button {width:100%;padding:14px;background:#3a383bff;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+button {width:100%;padding:14px;background:#3a383bff;color:rgba(255, 255, 255, 0.95);;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
 .error {background:#ffe5e5;color:#d32f2f;padding:12px;border-radius:8px;margin-bottom:15px;}
 </style>
 </head>

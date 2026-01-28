@@ -36,7 +36,7 @@ $page_title = 'Dashboard';
     flex-direction: column;   /* függőleges elrendezés */
     justify-content: center;  /* függőleges közép */
     align-items: center;      /* vízszintes közép */
-    background-color: #8300fdff;   /* háttér szín, ha kell */
+    background-color: #414141ff;   /* háttér szín, ha kell */
 }
 
 h1 {

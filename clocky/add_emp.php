@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("ssssi", $name, $email, $dob, $tn, $roleID);
         
         if ($stmt->execute()) {
-            $success_msg = "Employee added successfully!";
+            $success_msg = "Sikeresen felvetted az Alkalmazottat";
         } else {
             $error_msg = "Error: " . $conn->error;
         }
@@ -51,12 +51,12 @@ include 'header.php';
             max-width: 500px;
             margin: 100px auto;
         }
-        h2 { text-align: center; color: #b50ddf; margin-bottom: 20px; }
+        h2 { text-align: center; color: #000000ff; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        .btn-submit { width: 100%; padding: 12px; background: #b50ddf; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        .btn-submit:hover { background: #8f0fb0; }
+        .btn-submit { width: 100%; padding: 12px; background: #2a2a2aff; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        .btn-submit:hover { background: #484848ff; }
         .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
         .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
     </style>

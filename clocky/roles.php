@@ -35,11 +35,11 @@ if (isset($_GET['error'])) $error_msg = "Failed to add role. Try again.";
             margin-bottom: 30px;
         }
         .table thead {
-            background: linear-gradient(135deg, #a70fb4ff 0%, #7c00f8ff 100%);
+            background: linear-gradient(135deg, #00fff2ff 0%, #0cffb6ff 100%);
             color: white;
         }
         .table th, .table td {
-            padding: 12px 15px;
+            padding: 12px 15px;S
             text-align: left;
         }
         .table tbody tr {
@@ -47,7 +47,7 @@ if (isset($_GET['error'])) $error_msg = "Failed to add role. Try again.";
             transition: background-color 0.3s ease;
         }
         .table tbody tr:hover {
-            background: linear-gradient(135deg, #d10dd8ff 0%, #4906ceff 100%);
+            background: linear-gradient(135deg, #00ffccff 0%, #06baceff 100%);
             color: white;
         }
         .table tbody tr:last-child {
@@ -66,7 +66,7 @@ if (isset($_GET['error'])) $error_msg = "Failed to add role. Try again.";
         }
         h2 {
             text-align: center;
-            color: #aa2eaaff;
+            color: #000000ff;
             margin-bottom: 25px;
         }
         .form-group {
@@ -137,7 +137,7 @@ if (isset($_GET['error'])) $error_msg = "Failed to add role. Try again.";
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
+              
                 <th>Munkakör Neve</th>
                 <th>Fizetés Forintban</th>
             </tr>
@@ -150,7 +150,7 @@ if (isset($_GET['error'])) $error_msg = "Failed to add role. Try again.";
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>
-                            <td>" . htmlspecialchars($row['roleID']) . "</td>
+                           
                             <td>" . htmlspecialchars($row['role_name']) . "</td>
                             <td>" . htmlspecialchars($row['pph_huf']) . "</td>
                           </tr>";
