@@ -169,6 +169,7 @@ $page_title = 'Dashboard';
                 color: var(--accent-color);
             }
         }
+        
     </style>
 </head>
 <body>

@@ -199,13 +199,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 0.8rem;
             color: #444;
         }
+        /* --- ÚJ ANIMÁCIÓS RÉSZ --- */
+
+/* 1. Alapállapot beállítása a kártyának */
+.login-card {
+    animation: cardEntrance 0.8s ease-out forwards;
+    opacity: 0; /* Kezdetben láthatatlan */
+}
+
+/* 2. Az elemek késleltetett megjelenítése a kártyán belül */
+.login-card h1, 
+.login-card h2, 
+.form-group, 
+button, 
+.footer-text {
+    animation: contentFade 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+/* Egyedi késleltetések (sorrendben érkeznek) */
+h1 { animation-delay: 0.3s; }
+h2 { animation-delay: 0.4s; }
+.form-group:nth-child(1) { animation-delay: 0.5s; }
+.form-group:nth-child(2) { animation-delay: 0.6s; }
+button { animation-delay: 0.7s; }
+.footer-text { animation-delay: 0.9s; }
+
+/* 3. Animációs fázisok definiálása */
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes contentFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Extra: Pulzáló dekorációs fény a háttérben */
+.login-card::before {
+    animation: glowPulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes glowPulse {
+    from { opacity: 0.05; }
+    to { opacity: 0.15; }
+}
     </style>
 </head>
 <body>
 
 <div class="login-card">
     <h1>Clocky<span>.</span></h1>
-    <h2>Időmérés professzionálisan</h2>
+  
 
     <?php if (isset($error)): ?>
         <div class="error">
@@ -227,9 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Belépés <i class="fas fa-arrow-right"></i></button>
     </form>
 
-    <div class="footer-text">
-        &copy; 2026 Clocky Time Tracking System
-    </div>
+   
 </div>
 
 </body>
