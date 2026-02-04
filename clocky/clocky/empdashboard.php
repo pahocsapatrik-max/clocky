@@ -2,116 +2,130 @@
 session_start();
 require_once 'config.php';
 
-// Hibakeresés bekapcsolása
+// Hibakeresés bekapcsolása fejlesztés alatt
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 /* ===== 1. BELÉPÉS ELLENŐRZÉSE ===== */
-// Itt a 'jogosultsag' mezőt nézzük a belépéshez (0 = user)
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] != 0) {
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: index.php');
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
-/* ===== 2. ADATOK ELŐKÉSZÍTÉSE ===== */
+/* ===== 2. ADATOK LEKÉRÉSE (USERS + EMP ÖSSZEKÖTVE) ===== */
 try {
-    // Lekérjük a USERS táblából az ID-t és a MUNKAKÖR AZONOSÍTÓT (FK_roleID)
-    $user_sql = "SELECT ID, FK_roleID FROM USERS WHERE username = ? LIMIT 1";
-    $stmt = $conn->prepare($user_sql);
-    $stmt->bind_param("s", $username);
+    // Lekérjük az empID-t is, mert a worktime táblának valószínűleg erre van szüksége
+    $sql = "SELECT u.ID, u.jogosultsag, e.empID, e.FK_roleID 
+            FROM users u 
+            LEFT JOIN emp e ON u.ID = e.FK_userID 
+            WHERE u.ID = ? LIMIT 1";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $userData = $stmt->get_result()->fetch_assoc();
 
-    if (!$userData) {
+    if ($userData) {
+        $jogosultsag = (int)$userData['jogosultsag'];
+        $role_id = $userData['FK_roleID']; // Lehet NULL
+        $emp_id = $userData['empID'];     // Lehet NULL, ha admin
+    } else {
         die("Hiba: Felhasználó nem található!");
     }
-
-    $user_id = (int)$userData['ID'];
-    $role_id = $userData['FK_roleID']; // Ez a munkakör ID-ja
-
-    // Ellenőrizzük, hogy van-e munkaköre (ne legyen NULL)
-    if (is_null($role_id)) {
-        die("Hiba: Nincs munkakör (FK_roleID) beállítva a felhasználóhoz a USERS táblában!");
-    }
-
 } catch (Exception $e) {
-    die("Hiba az adatok beolvasásakor: " . $e->getMessage());
+    die("Adatbázis hiba: " . $e->getMessage());
 }
 
 /* ===== 3. AKTÍV MUNKA ELLENŐRZÉSE ===== */
-$check_work = "SELECT wt_ID FROM worktime WHERE FK_empID = ? AND end_datetime IS NULL LIMIT 1";
-$stmt = $conn->prepare($check_work);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$active_work = $stmt->get_result()->fetch_assoc();
+// Itt az empID alapján keressük a nyitott munkaidőt
+$active_work = null;
+if ($emp_id) {
+    $check_work = "SELECT wt_ID FROM worktime WHERE FK_empID = ? AND end_datetime IS NULL LIMIT 1";
+    $stmt = $conn->prepare($check_work);
+    $stmt->bind_param("i", $emp_id);
+    $stmt->execute();
+    $active_work = $stmt->get_result()->fetch_assoc();
+}
 
-/* ===== 4. INDÍTÁS / LEÁLLÍTÁS KEZELÉSE ===== */
+/* ===== 4. INDÍTÁS / LEÁLLÍTÁS ===== */
 if (isset($_POST['toggle_work'])) {
+    if (!$emp_id && $jogosultsag !== 1) {
+        die("Hiba: Ehhez a felhasználóhoz nincs alkalmazotti profil rendelve!");
+    }
+
     try {
         if (!$active_work) {
-            // MUNKA INDÍTÁSA
+            // INDÍTÁS
             $insert_sql = "INSERT INTO worktime (FK_empID, FK_roleID, start_datetime) VALUES (?, ?, NOW())";
             $stmt = $conn->prepare($insert_sql);
-            // Itt adjuk át a két külön azonosítót
-            $stmt->bind_param("ii", $user_id, $role_id); 
+            
+            // A bind_param-nál az "i" típus akkor is működik, ha az érték null, 
+            // feltéve, hogy az adatbázis oszlop engedi a NULL-t.
+            $stmt->bind_param("ii", $emp_id, $role_id); 
             $stmt->execute();
         } else {
-            // MUNKA LEÁLLÍTÁSA
+            // LEÁLLÍTÁS
             $wt_id = (int)$active_work['wt_ID'];
             $update_sql = "UPDATE worktime SET end_datetime = NOW() WHERE wt_ID = ?";
             $stmt = $conn->prepare($update_sql);
             $stmt->bind_param("i", $wt_id);
             $stmt->execute();
         }
-        header("Location: empdashboard.php");
+        
+        // Átirányítás a jogosultságnak megfelelően
+        $redirect = ($jogosultsag === 1) ? "dashboard.php" : "empdashboard.php";
+        header("Location: $redirect");
         exit();
-    } catch (mysqli_sql_exception $e) {
-        die("Adatbázis hiba mentéskor: " . $e->getMessage() . " (Próbált RoleID: $role_id)");
+    } catch (Exception $e) {
+        die("Hiba a mentés során: " . $e->getMessage());
     }
 }
-
-/* ===== 5. LOGOUT ===== */
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: index.php');
-    exit;
-}
 ?>
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Dolgozói Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clocky - Time Tracker</title>
     <style>
-        body { background: #00ffe1; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1a1a1a; color: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { width: 100%; padding: 15px; font-size: 18px; cursor: pointer; border: none; border-radius: 10px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        body { background: #0f0f0f; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .card { background: #1a1a1a; padding: 40px; border-radius: 24px; text-align: center; width: 320px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .btn { width: 100%; padding: 16px; font-size: 16px; cursor: pointer; border: none; border-radius: 12px; font-weight: 800; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
         .btn-start { background: #00ffe1; color: #1a1a1a; }
-        .btn-stop { background: #ff4444; color: white; }
-        .btn:hover { opacity: 0.8; transform: scale(1.02); }
-        .status { margin-top: 20px; color: #00ffe1; font-weight: bold; }
+        .btn-stop { background: #ff4757; color: white; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,255,225,0.2); }
+        .status-dot { display: inline-block; width: 10px; height: 10px; background: #00ffe1; border-radius: 50%; margin-right: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .info-text { color: #555; font-size: 0.75rem; margin-bottom: 30px; }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h1 style="color: #00ffe1; margin-bottom: 10px;">Szia, <?php echo htmlspecialchars($username); ?>!</h1>
-        <p style="color: #888; margin-bottom: 30px;">
-            User ID: <?php echo $user_id; ?> | Munkakör ID: <?php echo $role_id; ?>
+        <h2 style="margin-bottom: 10px;">Szia, <?php echo htmlspecialchars($username); ?>!</h2>
+        <p class="info-text">
+            Státusz: <?php echo $emp_id ? "Dolgozó (ID: $emp_id)" : "Adminisztrátor"; ?><br>
+            Role ID: <?php echo $role_id ?? 'Nincs'; ?>
         </p>
 
-        <form method="POST">
-            <?php if (!$active_work): ?>
-                <button type="submit" name="toggle_work" class="btn btn-start">Munka indítása</button>
-            <?php else: ?>
-                <button type="submit" name="toggle_work" class="btn btn-stop">Munka leállítása</button>
-                <div class="status">● Mérés folyamatban...</div>
-            <?php endif; ?>
-        </form>
+        <?php if (!$emp_id && $jogosultsag !== 1): ?>
+            <p style="color: #ff4757;">Nincs hozzárendelt dolgozói profil!</p>
+        <?php else: ?>
+            <form method="POST">
+                <?php if (!$active_work): ?>
+                    <button type="submit" name="toggle_work" class="btn btn-start">Munka indítása</button>
+                <?php else: ?>
+                    <button type="submit" name="toggle_work" class="btn btn-stop">Munka leállítása</button>
+                    <div style="margin-top: 20px; color: #00ffe1; font-size: 0.8rem; font-weight: bold;">
+                        <span class="status-dot"></span> Mérés folyamatban...
+                    </div>
+                <?php endif; ?>
+            </form>
+        <?php endif; ?>
 
-        <a href="?logout=1" style="display: block; margin-top: 25px; color: #444; text-decoration: none;">Kijelentkezés</a>
+        <a href="logout.php" style="display: block; margin-top: 30px; color: #444; text-decoration: none; font-size: 0.8rem;">Kijelentkezés</a>
     </div>
-
 </body>
 </html>

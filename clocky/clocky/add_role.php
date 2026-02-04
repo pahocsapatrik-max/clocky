@@ -2,6 +2,7 @@
 session_start();
 include 'config.php';
 
+// Jogosultság ellenőrzés
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 1) {
     header('Location: index.php');
     exit();
@@ -29,14 +30,130 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Add Role';
+$page_title = 'Új Munkakör';
 include 'header.php';
 ?>
 
+<style>
+    :root {
+        --bg-color: #0f0f0f;
+        --card-bg: #1a1a1a;
+        --accent-color: #00ffe1;
+        --text-secondary: #888;
+    }
+
+    body {
+        background: radial-gradient(circle at top right, #1e1e1e, var(--bg-color));
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .content-wrapper {
+        width: 100%;
+        max-width: 500px;
+        padding: 20px;
+    }
+
+    .glass-card {
+        background: var(--card-bg);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 30px;
+        letter-spacing: -1px;
+        color: #fff;
+        text-align: center;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 25px;
+    }
+
+    label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        color: var(--text-secondary);
+    }
+
+    input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        font-size: 1rem;
+        color: #fff;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 15px rgba(0, 255, 225, 0.1);
+    }
+
+    .btn-minimal {
+        width: 100%;
+        background: var(--accent-color);
+        color: #1a1a1a;
+        border: none;
+        padding: 16px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-minimal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 255, 225, 0.2);
+        filter: brightness(1.1);
+    }
+
+    .status-msg {
+        padding: 15px;
+        margin-bottom: 25px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .success-lite { 
+        background: rgba(0, 255, 225, 0.1); 
+        color: var(--accent-color); 
+        border: 1px solid var(--accent-color); 
+    }
+
+    .error-lite { 
+        background: rgba(255, 71, 87, 0.1); 
+        color: #ff4757; 
+        border: 1px solid #ff4757; 
+    }
+</style>
+
 <div class="content-wrapper">
-    <div class="form-container">
-        <h2>Új Munkakör</h2>
-        
+    <div class="glass-card">
+        <h2><i class="fas fa-briefcase" style="color: var(--accent-color); margin-right: 10px;"></i>Új Munkakör</h2>
 
         <?php if (!empty($success_msg)): ?>
             <div class="status-msg success-lite"><?= htmlspecialchars($success_msg) ?></div>
@@ -46,123 +163,24 @@ include 'header.php';
             <div class="status-msg error-lite"><?= htmlspecialchars($error_msg) ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="auth-form">
-            <div class="input-stack">
-                <div class="field">
-                    <label for="role_name">Munkakör Neve</label>
-                    <input type="text" id="role_name" name="role_name" required placeholder="pl. Senior Developer">
-                </div>
-
-                <div class="field">
-                    <label for="pph_huf">Órabér (HUF)</label>
-                    <input type="number" id="pph_huf" name="pph_huf" required placeholder="pl. 5000">
-                </div>
+        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+            <div class="field">
+                <label for="role_name">Munkakör Neve</label>
+                <input type="text" id="role_name" name="role_name" required placeholder="pl. Senior Developer">
             </div>
 
-            <div class="action-zone">
-                <button type="submit" class="btn-minimal">Munkakör mentése</button>
+            <div class="field">
+                <label for="pph_huf">Órabér (HUF / óra)</label>
+                <input type="number" id="pph_huf" name="pph_huf" required placeholder="pl. 5000">
             </div>
+
+            <button type="submit" class="btn-minimal">Munkakör mentése</button>
         </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="emp.php" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;">
+                <i class="fas fa-arrow-left"></i> Vissza a munkatársakhoz
+            </a>
+        </div>
     </div>
 </div>
-
-<style>
-    body {
-        background-color: #fcfcfc;
-        color: #2c3e50;
-        font-family: 'Inter', -apple-system, sans-serif;
-    }
-
-    .content-wrapper {
-        max-width: 600px;
-        margin: 100px auto;
-        padding: 0 20px;
-    }
-
-    h2 {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 8px;
-        color: #1a1a1a;
-    }
-
-    .subtitle {
-        color: #888;
-        margin-bottom: 45px;
-    }
-
-    .input-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-    }
-
-    .field {
-        display: flex;
-        flex-direction: column;
-    }
-
-    label {
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-        color: #666;
-        padding-left: 5px;
-    }
-
-    input {
-        background-color: #ffffff; /* Fehér háttér az írható résznek */
-        border: none;
-        border-bottom: 2px solid #eee;
-        padding: 15px 12px; /* Több hely az írásnak */
-        font-size: 1rem;
-        transition: all 0.2s ease-in-out;
-        border-radius: 4px 4px 0 0; /* Finom kerekítés felül */
-    }
-
-    input:focus {
-        outline: none;
-        background-color: #fff;
-        border-bottom-color: #00ffbbff;
-        box-shadow: 0 4px 12px rgba(0, 255, 187, 0.05); /* Nagyon enyhe türkiz ragyogás */
-    }
-
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    .action-zone {
-        margin-top: 50px;
-    }
-
-    .btn-minimal {
-        background: #1a1a1a;
-        color: #fff;
-        border: none;
-        padding: 16px 40px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 4px;
-    }
-
-    .btn-minimal:hover {
-        background: #00ffbbff;
-        color: #1a1a1a;
-    }
-
-    /* Üzenetek */
-    .status-msg {
-        padding: 15px;
-        margin-bottom: 30px;
-        border-radius: 4px;
-        font-size: 0.9rem;
-    }
-    .success-lite { background: #f0fff4; color: #22543d; border-left: 4px solid #00ffbbff; }
-    .error-lite { background: #fff5f5; color: #822727; border-left: 4px solid #feb2b2; }
-</style>

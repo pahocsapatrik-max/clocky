@@ -2,7 +2,6 @@
 session_start();
 include 'config.php';
 
-// 1. Jogosultság ellenőrzés
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 1) {
     header('Location: index.php');
     exit();
@@ -11,7 +10,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 1) {
 $success_msg = '';
 $error_msg = '';
 
-// --- 2. MÓDOSÍTÁSI LOGIKA (UPDATE) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_role'])) {
     $roleID = intval($_POST['roleID']);
     $role_name = trim($_POST['role_name']);
@@ -32,82 +30,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_role'])) {
     }
 }
 
-$page_title = 'Roles';
 include 'header.php';
 ?>
 
-<div class="container">
+<style>
+    :root {
+        --bg-color: #0f0f0f;
+        --card-bg: #1a1a1a;
+        --accent-color: #00ffe1;
+        --text-secondary: #888;
+    }
+
+    body {
+        background: radial-gradient(circle at top right, #1e1e1e, var(--bg-color));
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        padding: 40px 20px;
+    }
+
+    .glass-card {
+        background: var(--card-bg);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    h2 { font-weight: 800; letter-spacing: -1px; margin-bottom: 30px; text-align: center; }
+
+    /* Módosítási panel */
+    #editSection {
+        display: none;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid var(--accent-color);
+        margin-bottom: 40px;
+        animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 20px; }
+    label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; display: block; }
+    
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 10px;
+        color: #fff;
+        box-sizing: border-box;
+    }
+
+    /* Táblázat */
+    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+    .custom-table th { color: var(--text-secondary); text-transform: uppercase; font-size: 0.7rem; padding: 15px; text-align: left; }
+    .custom-table td { background: rgba(255, 255, 255, 0.02); padding: 15px; }
+    .custom-table tr td:first-child { border-radius: 12px 0 0 12px; }
+    .custom-table tr td:last-child { border-radius: 0 12px 12px 0; }
+
+    /* Gombok */
+    .btn-save { background: var(--accent-color); color: #000; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: transparent; color: var(--text-secondary); border: none; padding: 12px 24px; cursor: pointer; }
+    .btn-edit { background: rgba(0, 255, 225, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); padding: 6px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .btn-edit:hover { background: var(--accent-color); color: #000; }
+
+    .status-msg { padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: center; }
+    .success { background: rgba(0, 255, 225, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+    .error { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid #ff4757; }
+</style>
+
+<div class="glass-card">
     <h2>Munkakörök Kezelése</h2>
 
-    <style>
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            max-width: 900px;
-            margin: 40px auto;
-            font-family: sans-serif;
-        }
-        h2 { text-align: center; color: #333; margin-bottom: 25px; }
-        
-        .success { padding: 12px; background: #e8f5e9; color: #388e3c; border-radius: 6px; margin-bottom: 20px; text-align: center; border: 1px solid #c8e6c9; }
-        .error { padding: 12px; background: #ffebee; color: #d32f2f; border-radius: 6px; margin-bottom: 20px; text-align: center; border: 1px solid #ffcdd2; }
-
-        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .table thead { background: #00ffc3; color: black; }
-        .table th, .table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
-        .table tbody tr:hover { background: #f1f1f1; transition: 0.3s; }
-        
-        /* Módosítási panel stílusa */
-        #editSection {
-            display: none; /* Alaphelyzetben rejtett */
-            background: #fdfdfd;
-            padding: 20px;
-            border: 2px solid #00ffc3;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn-save { background: #333; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-cancel { background: #ccc; color: #333; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        .btn-edit { background: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-    </style>
-
-    <?php if ($success_msg): ?> <div class="success"><?php echo $success_msg; ?></div> <?php endif; ?>
-    <?php if ($error_msg): ?> <div class="error"><?php echo $error_msg; ?></div> <?php endif; ?>
+    <?php if ($success_msg): ?> <div class="status-msg success"><?php echo $success_msg; ?></div> <?php endif; ?>
+    <?php if ($error_msg): ?> <div class="status-msg error"><?php echo $error_msg; ?></div> <?php endif; ?>
 
     <div id="editSection">
-        <h3>Munkakör módosítása</h3>
+        <h3 style="margin-top: 0; margin-bottom: 20px;">Szerkesztés</h3>
         <form method="POST">
             <input type="hidden" name="roleID" id="edit_roleID">
             <div class="form-group">
-                <label>Munkakör neve:</label>
+                <label>Munkakör neve</label>
                 <input type="text" name="role_name" id="edit_role_name" required>
             </div>
             <div class="form-group">
-                <label>Órabér (HUF):</label>
+                <label>Órabér (HUF)</label>
                 <input type="number" name="pph_huf" id="edit_pph_huf" required>
             </div>
-            <button type="submit" name="update_role" class="btn-save">Változtatások mentése</button>
+            <button type="submit" name="update_role" class="btn-save">Mentés</button>
             <button type="button" class="btn-cancel" onclick="hideEdit()">Mégse</button>
         </form>
     </div>
 
-    <table class="table">
+    <table class="custom-table">
         <thead>
             <tr>
                 <th>Munkakör Neve</th>
-                <th>Fizetés (HUF / óra)</th>
-                <th>Műveletek</th>
+                <th>Fizetés / óra</th>
+                <th style="text-align: right;">Műveletek</th>
             </tr>
         </thead>
         <tbody>
@@ -117,18 +142,17 @@ include 'header.php';
 
             if ($result && $result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
-                    // Adatok előkészítése JS számára
                     $safe_name = htmlspecialchars($row['role_name'], ENT_QUOTES);
                     echo "<tr>
-                            <td>" . htmlspecialchars($row['role_name']) . "</td>
-                            <td>" . number_format($row['pph_huf'], 0, ',', ' ') . " Ft</td>
-                            <td>
-                                <button class='btn-edit' onclick='showEdit({$row['roleID']}, \"{$safe_name}\", {$row['pph_huf']})'>Szerkesztés</button>
+                            <td><strong>" . htmlspecialchars($row['role_name']) . "</strong></td>
+                            <td style='font-family: monospace;'>" . number_format($row['pph_huf'], 0, ',', ' ') . " Ft</td>
+                            <td style='text-align: right;'>
+                                <button class='btn-edit' onclick='showEdit({$row['roleID']}, \"{$safe_name}\", {$row['pph_huf']})'>
+                                    <i class='fas fa-edit'></i> Szerkesztés
+                                </button>
                             </td>
                           </tr>";
                 }
-            } else {
-                echo "<tr><td colspan='3' style='text-align:center;'>Nincsenek rögzített munkakörök.</td></tr>";
             }
             ?>
         </tbody>
@@ -141,8 +165,6 @@ function showEdit(id, name, pph) {
     document.getElementById('edit_roleID').value = id;
     document.getElementById('edit_role_name').value = name;
     document.getElementById('edit_pph_huf').value = pph;
-    
-    // Az oldal az űrlaphoz ugrik
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -152,5 +174,3 @@ function hideEdit() {
 </script>
 
 <?php $conn->close(); ?>
-</body>
-</html>
