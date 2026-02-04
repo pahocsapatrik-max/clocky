@@ -10,7 +10,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $username = $_SESSION['username'];
 $role = $_SESSION['role'] ?? 0;
 
-// SQL lekérdezés a dizájnhoz optimalizálva
 $sql = "SELECT 
             e.name as dolgozo_neve, 
             r.role_name, 
@@ -33,113 +32,129 @@ include_once 'header.php';
 
 <style>
     :root {
-        --bg-color: #0f0f0f;
-        --card-bg: #1a1a1a;
         --accent-color: #00ffe1;
-        --text-secondary: #888;
+        --card-bg: #1a1a1a;
+        --text-dim: #888;
     }
 
     body {
-        background: radial-gradient(circle at top right, #1e1e1e, var(--bg-color));
+        background: #0f0f0f;
         color: #fff;
         font-family: 'Inter', sans-serif;
         margin: 0;
-        padding: 40px 20px;
-        display: flex;
-        justify-content: center;
+        padding: 0;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        box-sizing: border-box;
     }
 
     .glass-card {
         background: var(--card-bg);
-        padding: 40px;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-        width: 100%;
-        max-width: 1100px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: clamp(15px, 4vw, 30px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     h1.title {
-        font-weight: 800;
-        letter-spacing: -1px;
-        margin-bottom: 30px;
-        color: #fff;
+        font-size: clamp(1.3rem, 5vw, 1.8rem);
+        margin-bottom: 25px;
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
     }
 
-    h1.title i { color: var(--accent-color); }
-
-    .table-container { overflow-x: auto; }
-
-    .custom-table {
+    /* ASZTALI TÁBLÁZAT STÍLUS */
+    .responsive-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 10px;
+        border-collapse: collapse;
     }
 
-    .custom-table th {
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 1px;
-        padding: 15px;
+    .responsive-table thead tr {
+        border-bottom: 2px solid rgba(255,255,255,0.05);
+    }
+
+    .responsive-table th {
         text-align: left;
-    }
-
-    .custom-table td {
-        background: rgba(255, 255, 255, 0.03);
         padding: 15px;
-        border: none;
-        transition: 0.3s;
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    .custom-table tr:hover td {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--accent-color);
+    .responsive-table td {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 0.95rem;
     }
 
-    .custom-table tr td:first-child { border-radius: 12px 0 0 12px; }
-    .custom-table tr td:last-child { border-radius: 0 12px 12px 0; }
+    /* MOBIL NÉZET (Váltás kártyákra 850px alatt) */
+    @media screen and (max-width: 850px) {
+        .responsive-table thead {
+            display: none; /* Fejléc elrejtése */
+        }
 
-    .badge-duration {
-        background: rgba(0, 255, 225, 0.1);
-        color: var(--accent-color);
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.85rem;
+        .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .responsive-table tr {
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .responsive-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 12px 10px;
+            text-align: right;
+        }
+
+        .responsive-table td:last-child {
+            border-bottom: none;
+        }
+
+        /* Feliratok hozzáadása mobilon */
+        .responsive-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            text-align: left;
+        }
     }
 
-    .badge-active {
-        background: rgba(255, 188, 0, 0.1);
-        color: #ffbc00;
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-weight: 700;
+    .badge {
+        padding: 4px 10px;
+        border-radius: 6px;
         font-size: 0.8rem;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-    }
-
-    .money-text {
-        font-family: 'Mono', monospace;
         font-weight: 700;
-        color: #fff;
     }
+
+    .badge-duration { background: rgba(0, 255, 225, 0.1); color: var(--accent-color); }
+    .badge-active { background: rgba(255, 188, 0, 0.1); color: #ffbc00; }
+
+    .money { font-family: monospace; font-weight: bold; color: #fff; }
 </style>
 
-<div class="glass-card">
-    <h1 class="title"><i class="fas fa-history"></i> Munkaidő Napló</h1>
+<div class="container">
+    <div class="glass-card">
+        <h1 class="title"><i class="fas fa-history" style="color: var(--accent-color);"></i> Munkaidő Napló</h1>
 
-    <div class="table-container">
-        <table class="custom-table">
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Dolgozó</th>
@@ -155,35 +170,29 @@ include_once 'header.php';
                     <?php while($row = $result->fetch_assoc()): ?>
                         <?php
                             $start = new DateTime($row['start_datetime']);
-                            $duration = "-";
-                            $money = "-";
+                            $duration_html = '<span class="badge badge-active">FOLYAMATBAN</span>';
+                            $money_val = "---";
 
                             if ($row['end_datetime']) {
                                 $end = new DateTime($row['end_datetime']);
                                 $diff = $start->diff($end);
-                                $duration = '<span class="badge-duration">' . $diff->format('%h óra %i p') . '</span>';
-
-                                $total_seconds = $end->getTimestamp() - $start->getTimestamp();
-                                $money = number_format(($total_seconds / 3600) * $row['pph_HUF'], 0, ',', ' ') . " Ft";
-                            } else {
-                                $duration = '<span class="badge-active">FOLYAMATBAN</span>';
+                                $duration_html = '<span class="badge badge-duration">' . $diff->format('%hó %ip') . '</span>';
+                                
+                                $sec = $end->getTimestamp() - $start->getTimestamp();
+                                $money_val = number_format(($sec / 3600) * $row['pph_HUF'], 0, ',', ' ') . " Ft";
                             }
                         ?>
                         <tr>
-                            <td><strong><?php echo htmlspecialchars($row['dolgozo_neve']); ?></strong></td>
-                            <td style="color: var(--text-secondary);"><?php echo htmlspecialchars($row['role_name']); ?></td>
-                            <td><?php echo $start->format('Y.m.d. H:i'); ?></td>
-                            <td><?php echo $row['end_datetime'] ? date('H:i', strtotime($row['end_datetime'])) : "---"; ?></td>
-                            <td><?php echo $duration; ?></td>
-                            <td class="money-text"><?php echo $money; ?></td>
+                            <td data-label="Dolgozó"><strong><?php echo htmlspecialchars($row['dolgozo_neve']); ?></strong></td>
+                            <td data-label="Munkakör"><?php echo htmlspecialchars($row['role_name']); ?></td>
+                            <td data-label="Kezdés"><?php echo $start->format('Y.m.d. H:i'); ?></td>
+                            <td data-label="Befejezés"><?php echo $row['end_datetime'] ? date('H:i', strtotime($row['end_datetime'])) : "---"; ?></td>
+                            <td data-label="Időtartam"><?php echo $duration_html; ?></td>
+                            <td data-label="Kereset" class="money"><?php echo $money_val; ?></td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding: 50px; color: var(--text-secondary);">
-                            Nincsenek rögzített adatok.
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" style="text-align:center;">Nincs adat.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

@@ -20,25 +20,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($name) && !empty($email)) {
         
-        // Tranzakció indítása, hogy ha az egyik táblába nem sikerül a mentés, a másikba se kerüljön be félkész adat
         $conn->begin_transaction();
 
         try {
-            // A. Felhasználó létrehozása a USERS táblában
-            // Alapértelmezett felhasználónév: email első fele, alapértelmezett jelszó: 1234
             $default_username = explode('@', $email)[0];
             $default_password = "1234"; 
-            $default_role = 0; // Sima dolgozói jog (nem admin)
+            $default_role = 0; 
 
             $user_stmt = $conn->prepare("INSERT INTO users (username, password, name, jogosultsag) VALUES (?, ?, ?, ?)");
             $user_stmt->bind_param("sssi", $default_username, $default_password, $name, $default_role);
             $user_stmt->execute();
             
-            // Megkapjuk a generált userID-t
             $new_user_id = $conn->insert_id;
 
-            // B. Dolgozó létrehozása az EMP táblában
-            // Itt beállítjuk az active=1-et fixen, hogy azonnal megjelenjen a listában!
             $stmt = $conn->prepare("INSERT INTO emp (name, email, dob, tn, FK_roleID, FK_userID, active) VALUES (?, ?, ?, ?, ?, ?, 1)");
             $stmt->bind_param("ssssii", $name, $email, $dob, $tn, $roleID, $new_user_id);
             
@@ -59,8 +53,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Új dolgozó';
-include 'header.php';
 ?>
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $page_title; ?></title>
+    <link rel="stylesheet" href="header.css">
+</head>
+<body>
+
+<?php include 'header.php'; ?>
 
 <div class="content-wrapper">
     <div class="glass-card">
@@ -112,7 +116,6 @@ include 'header.php';
 
             <div class="action-zone">
                 <button type="submit" class="btn-minimal">Dolgozó rögzítése</button>
-                
             </div>
         </form>
     </div>
@@ -122,68 +125,149 @@ include 'header.php';
     :root {
         --accent-color: #00ffe1;
         --card-bg: #1a1a1a;
+        --text-color: #ffffff;
     }
 
     body {
         background: radial-gradient(circle at top right, #1e1e1e, #0f0f0f);
-        color: #fff;
+        color: var(--text-color);
         font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
     }
 
     .content-wrapper {
+        width: 100%;
         max-width: 800px;
-        margin: 60px auto;
+        margin: 40px auto;
         padding: 20px;
+        box-sizing: border-box;
     }
 
     .glass-card {
         background: var(--card-bg);
-        padding: 40px;
+        padding: clamp(20px, 5vw, 40px);
         border-radius: 24px;
         border: 1px solid rgba(255, 255, 255, 0.05);
         box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
-    h2 { font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; }
+    h2 { 
+        font-weight: 800; 
+        margin-bottom: 30px; 
+        letter-spacing: -1px; 
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
+    }
 
-    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .full-width { grid-column: span 2; }
+    .input-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 20px; 
+    }
 
-    label { font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 8px; display: block; }
+    .field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .full-width { 
+        grid-column: span 2; 
+    }
+
+    label { 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        color: #888; 
+        margin-bottom: 8px; 
+        display: block; 
+    }
 
     input, select {
         width: 100%;
-        background: rgba(234, 229, 229, 0.05);
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255,255,255,0.1);
         padding: 12px;
         border-radius: 10px;
-        color: #000000ff;
+        color: white; /* Javítva: Fehér szöveg a sötét háttéren */
+        font-size: 1rem;
         transition: 0.3s;
+        box-sizing: border-box;
     }
 
-    input:focus { border-color: var(--accent-color); outline: none; }
+    /* Select option színek javítása sötét módhoz */
+    select option {
+        background-color: #1a1a1a;
+        color: white;
+    }
 
-    .action-zone { margin-top: 40px; display: flex; gap: 15px; align-items: center; }
+    input:focus, select:focus { 
+        border-color: var(--accent-color); 
+        outline: none; 
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .action-zone { 
+        margin-top: 40px; 
+        display: flex; 
+        justify-content: center;
+    }
 
     .btn-minimal {
         background: var(--accent-color);
         color: #000;
         border: none;
-        padding: 15px 30px;
+        padding: 15px 40px;
         font-weight: 700;
-        border-radius: 10px;
+        font-size: 1rem;
+        border-radius: 12px;
         cursor: pointer;
         transition: 0.3s;
+        width: 100%; /* Mobilon teljes szélesség */
+        max-width: 300px;
     }
 
-    .btn-minimal:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 255, 225, 0.3); }
+    .btn-minimal:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 10px 20px rgba(0, 255, 225, 0.3); 
+    }
 
-    .btn-back { color: #ffffffff; text-decoration: none; font-size: 0.9rem; }
-    .btn-back:hover { color: #000000ff; }
+    .status-msg { 
+        padding: 15px; 
+        border-radius: 10px; 
+        margin-bottom: 25px; 
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
 
-    .status-msg { padding: 15px; border-radius: 10px; margin-bottom: 25px; }
-    .success-lite { background: rgba(0, 255, 225, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
-    .error-lite { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid #ff4757; }
+    .success-lite { 
+        background: rgba(0, 255, 225, 0.1); 
+        color: var(--accent-color); 
+        border: 1px solid var(--accent-color); 
+    }
 
-    @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } }
+    .error-lite { 
+        background: rgba(255, 71, 87, 0.1); 
+        color: #ff4757; 
+        border: 1px solid #ff4757; 
+    }
+
+    /* Mobil nézet optimalizálás */
+    @media (max-width: 650px) { 
+        .input-grid { 
+            grid-template-columns: 1fr; 
+        } 
+        .full-width { 
+            grid-column: span 1; 
+        } 
+        .content-wrapper {
+            margin: 20px auto;
+        }
+        .btn-minimal {
+            max-width: 100%;
+        }
+    }
 </style>
+
+</body>
+</html>
