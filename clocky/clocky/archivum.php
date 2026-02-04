@@ -35,8 +35,8 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <title>Clocky - Archívum</title>
     <style>
-        body { background-color: #f4f4f4; margin: 0; padding: 0; }
-        .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1100px; margin: 40px auto; font-family: Arial, sans-serif; }
+        body { background-color: #ffffffff; margin: 0; padding: 0; }
+        .container { background: #ffffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); max-width: 1100px; margin: 40px auto; font-family: Arial, sans-serif; }
         .table { width: 100%; border-collapse: collapse; }
         .table th, .table td { padding: 12px; border: 1px solid #eee; text-align: left; }
         .table thead { background: #00ffcc; }
@@ -44,7 +44,7 @@ $result = $conn->query($sql);
         .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; font-family: sans-serif; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1 { margin: 0; color: #333; }
+        h1 { margin: 0; color: #ffffffff; }
         /* Export gomb stílusa */
         .btn-export { display: inline-block; text-decoration: none; padding: 10px 15px; background: #007bff; color: #fff; border-radius: 4px; font-weight: bold; border: none; cursor: pointer; }
         .export-actions { margin-bottom: 20px; text-align: right; }

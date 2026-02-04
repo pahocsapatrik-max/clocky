@@ -79,7 +79,7 @@ include 'header.php';
 ?>
 
 <div class="container">
-    <h2>Munkaidő Nyilvántartás - Aktív Dolgozók</h2>
+    <h2> Aktív Dolgozók</h2>
     
     <?php echo $message; ?>
 

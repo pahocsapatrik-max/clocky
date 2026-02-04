@@ -1,14 +1,77 @@
 <?php
 session_start();
+require_once 'config.php';
 
-/* ===== BEJELENTKEZÉS ÉS ROLE ELLENŐRZÉSE ===== */
-$role = (int)($_SESSION['role'] ?? -1);
-if (!isset($_SESSION['logged_in'], $_SESSION['role']) || $_SESSION['logged_in'] !== true || $role !== 0) {
+// Hibakeresés bekapcsolása
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+/* ===== 1. BELÉPÉS ELLENŐRZÉSE ===== */
+// Itt a 'jogosultsag' mezőt nézzük a belépéshez (0 = user)
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] != 0) {
     header('Location: index.php');
     exit;
 }
 
-/* ===== LOGOUT KEZELÉS ===== */
+$username = $_SESSION['username'];
+
+/* ===== 2. ADATOK ELŐKÉSZÍTÉSE ===== */
+try {
+    // Lekérjük a USERS táblából az ID-t és a MUNKAKÖR AZONOSÍTÓT (FK_roleID)
+    $user_sql = "SELECT ID, FK_roleID FROM USERS WHERE username = ? LIMIT 1";
+    $stmt = $conn->prepare($user_sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $userData = $stmt->get_result()->fetch_assoc();
+
+    if (!$userData) {
+        die("Hiba: Felhasználó nem található!");
+    }
+
+    $user_id = (int)$userData['ID'];
+    $role_id = $userData['FK_roleID']; // Ez a munkakör ID-ja
+
+    // Ellenőrizzük, hogy van-e munkaköre (ne legyen NULL)
+    if (is_null($role_id)) {
+        die("Hiba: Nincs munkakör (FK_roleID) beállítva a felhasználóhoz a USERS táblában!");
+    }
+
+} catch (Exception $e) {
+    die("Hiba az adatok beolvasásakor: " . $e->getMessage());
+}
+
+/* ===== 3. AKTÍV MUNKA ELLENŐRZÉSE ===== */
+$check_work = "SELECT wt_ID FROM worktime WHERE FK_empID = ? AND end_datetime IS NULL LIMIT 1";
+$stmt = $conn->prepare($check_work);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$active_work = $stmt->get_result()->fetch_assoc();
+
+/* ===== 4. INDÍTÁS / LEÁLLÍTÁS KEZELÉSE ===== */
+if (isset($_POST['toggle_work'])) {
+    try {
+        if (!$active_work) {
+            // MUNKA INDÍTÁSA
+            $insert_sql = "INSERT INTO worktime (FK_empID, FK_roleID, start_datetime) VALUES (?, ?, NOW())";
+            $stmt = $conn->prepare($insert_sql);
+            // Itt adjuk át a két külön azonosítót
+            $stmt->bind_param("ii", $user_id, $role_id); 
+            $stmt->execute();
+        } else {
+            // MUNKA LEÁLLÍTÁSA
+            $wt_id = (int)$active_work['wt_ID'];
+            $update_sql = "UPDATE worktime SET end_datetime = NOW() WHERE wt_ID = ?";
+            $stmt = $conn->prepare($update_sql);
+            $stmt->bind_param("i", $wt_id);
+            $stmt->execute();
+        }
+        header("Location: empdashboard.php");
+        exit();
+    } catch (mysqli_sql_exception $e) {
+        die("Adatbázis hiba mentéskor: " . $e->getMessage() . " (Próbált RoleID: $role_id)");
+    }
+}
+
+/* ===== 5. LOGOUT ===== */
 if (isset($_GET['logout'])) {
     session_destroy();
     header('Location: index.php');
@@ -19,182 +82,36 @@ if (isset($_GET['logout'])) {
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Felhasználói Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Dolgozói Dashboard</title>
     <style>
-        /* Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #00ffe1; /* Ciánkék háttér */
-            font-family: 'Roboto', sans-serif;
-            overflow: hidden;
-        }
-
-        /* --- MENÜ GOMB (Hamburger) --- */
-        .menu-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: #1a1a1a;
-            color: #00ffe1;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-
-        .menu-toggle:hover {
-            background-color: white;
-            color: #1a1a1a;
-            transform: scale(1.05);
-        }
-
-        /* Hamburger vonalak */
-        .hamburger-lines {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .line {
-            width: 18px;
-            height: 2px;
-            background-color: currentColor;
-            display: block;
-        }
-
-        /* --- NAVIGÁCIÓS PANEL --- */
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 280px;
-            background-color: #1a1a1a;
-            z-index: 1000;
-            max-height: 0; /* Alaphelyzetben zárva */
-            overflow: hidden;
-            transition: max-height 0.4s ease-in-out;
-            border-bottom-right-radius: 20px;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.4);
-            padding-top: 0;
-        }
-
-        nav.open {
-            max-height: 400px; /* Lenyíló magasság */
-            padding-top: 80px; /* Hely a gomb alatt */
-            padding-bottom: 20px;
-        }
-
-        nav ul {
-            list-style: none;
-            padding: 0 20px;
-        }
-
-        nav ul li {
-            margin-bottom: 10px;
-        }
-
-        nav ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: white;
-            text-decoration: none;
-            font-weight: 700;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            background: #262626;
-        }
-
-        nav ul li a:hover {
-            background: #00ffe1;
-            color: #1a1a1a;
-            transform: translateX(10px);
-        }
-
-        /* Kijelentkezés a menüben */
-        nav ul li.logout-item a {
-            background: #d32f2f;
-            color: white;
-            margin-top: 20px;
-        }
-        nav ul li.logout-item a:hover {
-            background: #b71c1c;
-        }
-
-        /* --- TARTALOM --- */
-        h1 {
-            color: white;
-            font-size: 60px;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
-            margin: 0;
-            text-align: center;
-        }
-
-        h2 {
-            color: white;
-            font-size: 40px;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
-            margin: 0;
-            text-align: center;
-        }
+        body { background: #00ffe1; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1a1a1a; color: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { width: 100%; padding: 15px; font-size: 18px; cursor: pointer; border: none; border-radius: 10px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        .btn-start { background: #00ffe1; color: #1a1a1a; }
+        .btn-stop { background: #ff4444; color: white; }
+        .btn:hover { opacity: 0.8; transform: scale(1.02); }
+        .status { margin-top: 20px; color: #00ffe1; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <button class="menu-toggle" onclick="toggleMenu()">
-        <div class="hamburger-lines">
-            <span class="line"></span>
-            <span class="line"></span>
-            <span class="line"></span>
-        </div>
-        Menü
-    </button>
+    <div class="card">
+        <h1 style="color: #00ffe1; margin-bottom: 10px;">Szia, <?php echo htmlspecialchars($username); ?>!</h1>
+        <p style="color: #888; margin-bottom: 30px;">
+            User ID: <?php echo $user_id; ?> | Munkakör ID: <?php echo $role_id; ?>
+        </p>
 
-    <nav id="userNav">
-        <ul>
-            
-            <li class="logout-item"><a href="?logout=1">Kijelentkezés</a></li>
-        </ul>
-    </nav>
+        <form method="POST">
+            <?php if (!$active_work): ?>
+                <button type="submit" name="toggle_work" class="btn btn-start">Munka indítása</button>
+            <?php else: ?>
+                <button type="submit" name="toggle_work" class="btn btn-stop">Munka leállítása</button>
+                <div class="status">● Mérés folyamatban...</div>
+            <?php endif; ?>
+        </form>
 
-    <h1>ÜDVÖZÖLJÜK!</h1>
-    <h2>ÖNNEK SIMA JOGOSULTSÁGAI VANNAK</h2>
-
-    <script>
-        function toggleMenu() {
-            const nav = document.getElementById('userNav');
-            nav.classList.toggle('open');
-        }
-
-        // Bezárás, ha a menün kívülre kattintunk
-        document.addEventListener('click', function(event) {
-            const nav = document.getElementById('userNav');
-            const btn = document.querySelector('.menu-toggle');
-            if (!nav.contains(event.target) && !btn.contains(event.target)) {
-                nav.classList.remove('open');
-            }
-        });
-    </script>
+        <a href="?logout=1" style="display: block; margin-top: 25px; color: #444; text-decoration: none;">Kijelentkezés</a>
+    </div>
 
 </body>
 </html>

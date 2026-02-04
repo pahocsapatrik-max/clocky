@@ -161,6 +161,7 @@
         <li><a href="add_emp.php" class="<?php echo ($page_title=='addemp')?'active':''; ?>">Dolgozó hozzáadása</a></li>
         <li><a href="add_role.php" class="<?php echo ($page_title=='addrole')?'active':''; ?>">Munkakör hozzáadása</a></li>
         <li><a href="archivum.php" class="<?php echo ($page_title=='archivum')?'active':''; ?>">Archívum</a></li>
+        <li><a href="list.php" class="<?php echo ($page_title=='lista')?'active':''; ?>">lista</a></li>
         <li class="logout"><a href="logout.php">Kijelentkezés</a></li>
     </ul>
 </nav>
