@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
-            // Biztonsági megjegyzés: Élesben password_verify()-t használj!
             if ($password === trim($user['password'])) {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['user_id'] = $user['id'];
@@ -67,8 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Clocky</title>
+    <title>Login - ClockY</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0f0f0f;
@@ -99,9 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 400px;
             text-align: center;
             position: relative;
+            animation: cardEntrance 0.8s ease-out forwards;
+            opacity: 0;
         }
 
-        /* Dekorációs elem */
         .login-card::before {
             content: '';
             position: absolute;
@@ -110,29 +111,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 26px;
             z-index: -1;
             opacity: 0.1;
+            animation: glowPulse 3s infinite alternate ease-in-out;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            animation: contentFade 0.6s ease-out forwards;
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+
+        .brand-header i {
+            color: var(--accent-color);
+            font-size: 2.2rem;
+            animation: hourglassFlip 3s infinite ease-in-out;
         }
 
         h1 {
             font-size: 3rem;
             font-weight: 900;
             letter-spacing: -2px;
-            margin-bottom: 10px;
             color: #fff;
+            /* text-transform: lowercase; <- Eltávolítva a nagybetűk megőrzéséhez */
+            display: flex;
+            align-items: baseline;
         }
 
-        h1 span { color: var(--accent-color); }
-
-        h2 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        h1 span { 
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-color);
+            margin-left: 6px;
         }
 
         .form-group {
             margin-bottom: 25px;
             text-align: left;
+            animation: contentFade 0.6s ease-out forwards;
+            opacity: 0;
         }
 
         label {
@@ -176,6 +197,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             transition: 0.3s;
             margin-top: 10px;
+            animation: contentFade 0.6s ease-out forwards;
+            opacity: 0;
+            animation-delay: 0.7s;
         }
 
         button:hover {
@@ -194,76 +218,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 1px solid rgba(255, 71, 87, 0.2);
         }
 
-        .footer-text {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #444;
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        /* --- ÚJ ANIMÁCIÓS RÉSZ --- */
 
-/* 1. Alapállapot beállítása a kártyának */
-.login-card {
-    animation: cardEntrance 0.8s ease-out forwards;
-    opacity: 0; /* Kezdetben láthatatlan */
-}
+        @keyframes contentFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-/* 2. Az elemek késleltetett megjelenítése a kártyán belül */
-.login-card h1, 
-.login-card h2, 
-.form-group, 
-button, 
-.footer-text {
-    animation: contentFade 0.6s ease-out forwards;
-    opacity: 0;
-}
+        @keyframes glowPulse {
+            from { opacity: 0.05; }
+            to { opacity: 0.15; }
+        }
 
-/* Egyedi késleltetések (sorrendben érkeznek) */
-h1 { animation-delay: 0.3s; }
-h2 { animation-delay: 0.4s; }
-.form-group:nth-child(1) { animation-delay: 0.5s; }
-.form-group:nth-child(2) { animation-delay: 0.6s; }
-button { animation-delay: 0.7s; }
-.footer-text { animation-delay: 0.9s; }
+        @keyframes hourglassFlip {
+            0% { transform: rotate(0); }
+            40% { transform: rotate(180deg); }
+            50% { transform: rotate(180deg); }
+            90% { transform: rotate(360deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-/* 3. Animációs fázisok definiálása */
-@keyframes cardEntrance {
-    from {
-        opacity: 0;
-        transform: translateY(30px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+        .form-group:nth-child(1) { animation-delay: 0.5s; }
+        .form-group:nth-child(2) { animation-delay: 0.6s; }
 
-@keyframes contentFade {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Extra: Pulzáló dekorációs fény a háttérben */
-.login-card::before {
-    animation: glowPulse 3s infinite alternate ease-in-out;
-}
-
-@keyframes glowPulse {
-    from { opacity: 0.05; }
-    to { opacity: 0.15; }
-}
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <h1>Clocky<span>.</span></h1>
-  
+    <div class="brand-header">
+        <i class="fas fa-hourglass-half"></i>
+        <h1>Clocky<span></span></h1>
+    </div>
 
     <?php if (isset($error)): ?>
         <div class="error">
@@ -284,8 +273,6 @@ button { animation-delay: 0.7s; }
 
         <button type="submit">Belépés <i class="fas fa-arrow-right"></i></button>
     </form>
-
-   
 </div>
 
 </body>
