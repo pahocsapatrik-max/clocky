@@ -201,7 +201,7 @@ include 'header.php';
             </div>
 
             <div class="action-zone">
-                <button type="submit" class="btn-minimal">Munkakör mentése</button>
+                <button type="submit" class="btn-minimal">Rögzítés</button>
             </div>
         </form>
     </div>

@@ -257,7 +257,7 @@ $page_title = 'Új dolgozó rögzítése';
             </div>
 
             <div class="action-zone">
-                <button type="submit" class="btn-minimal">Rögzítés Indítása</button>
+                <button type="submit" class="btn-minimal">Rögzítés </button>
             </div>
         </form>
     </div>
